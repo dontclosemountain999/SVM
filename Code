@@ -1,0 +1,114 @@
+import pandas as pd
+import numpy as np
+dataset=pd.read_csv('tripadvisor_review.csv')
+print(dataset.shape)
+print(dataset.head)
+
+#declaring input
+x=dataset.drop(['User ID','avg'],axis=1)
+print(x)
+
+
+x = np.array(x)
+print(x)
+
+def f(s):
+    if(s>1.720):
+        return(1)
+    else:
+        return(0)
+        
+dataset['target']=dataset['avg'].apply(f)
+y=dataset['target']
+
+y=np.array(y)
+print(y.shape)
+print(y)
+print(type(y))
+
+'''
+from imblearn.over_sampling import SMOTE
+smt = SMOTE()
+x,y = smt.fit_sample(X,Y)
+'''
+print(x)
+print(y)
+
+'''
+#softmax function
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    return np.exp(x) / np.sum(np.exp(x), axis=0)
+'''
+
+#sigmoid function
+def sigmoid (x):
+    return 1/(1 + np.exp(-x))
+
+
+#Derivative of Sigmoid Function
+def derivatives_sigmoid(x):
+    return x * (1 - x)
+
+#Variable initialization
+epoch=100 #Setting training iterations
+lr=0.01 #Setting learning rate
+inputlayer_neurons = 10 #number of features in data set
+hiddenlayer_neurons = 5 #number of hidden layers neurons
+output_neurons = 1 #number of neurons at output layer
+
+#weight and bias initialization
+wh=np.random.uniform(size=(inputlayer_neurons,hiddenlayer_neurons))
+bh=np.random.uniform(size=(1,hiddenlayer_neurons))
+wout=np.random.uniform(size=(hiddenlayer_neurons,output_neurons))
+bout=np.random.uniform(size=(1,output_neurons))
+
+
+import matplotlib.pyplot as plt
+z=[]
+o=[]
+for i in y:
+    if(i==1):
+        o.append(1)
+    if(i==0):
+        z.append(0)
+        
+plt.hist([z,o])
+
+
+
+for i in range(epoch):
+
+    #Forward Propogation
+    hidden_layer_input1=np.dot(x,wh)
+    hidden_layer_input=hidden_layer_input1 + bh
+    hiddenlayer_activations = sigmoid(hidden_layer_input)
+    output_layer_input1=np.dot(hiddenlayer_activations,wout)
+    output_layer_input= output_layer_input1+ bout
+    output = sigmoid(output_layer_input)
+    #Backpropagation
+    E = y-output
+    slope_output_layer = derivatives_sigmoid(output)
+    slope_hidden_layer = derivatives_sigmoid(hiddenlayer_activations)
+    d_output = np.dot(E,slope_output_layer)
+    Error_at_hidden_layer = d_output.dot(wout.T)
+    d_hiddenlayer = Error_at_hidden_layer * slope_hidden_layer
+    wout += hiddenlayer_activations.T.dot(d_output) *lr
+    bout += np.sum(d_output, axis=0,keepdims=True) *lr
+    wh += x.T.dot(d_hiddenlayer) *lr
+    bh += np.sum(d_hiddenlayer, axis=0,keepdims=True) *lr
+
+
+print(output)
+print(E)
+
+
+
+from sklearn.metrics import accuracy_score
+print(accuracy_score(y,output))
+
+
+from sklearn.metrics import confusion_matrix 
+from sklearn.metrics import classification_report
+print(confusion_matrix(y,output))
+print(classification_report(y,output))
